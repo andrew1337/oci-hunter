@@ -1,4 +1,5 @@
 """CLI entry point: python -m oci_hunter"""
+
 import argparse
 import sys
 
@@ -11,11 +12,14 @@ from .telegram import TelegramClient
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Oracle Cloud free tier instance hunter")
-    parser.add_argument("--once", action="store_true",
-                        help="make one launch attempt and exit")
+        description="Oracle Cloud free tier instance hunter"
+    )
+    parser.add_argument(
+        "--once", action="store_true", help="make one launch attempt and exit"
+    )
     args = parser.parse_args()
     from .hunter import run
+
     try:
         return run(args)
     except Fatal as exc:

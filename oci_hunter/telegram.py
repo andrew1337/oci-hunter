@@ -5,6 +5,7 @@ The status poller long-polls getUpdates in a background thread and only
 ever replies to the chat configured via TG_CHAT_ID; messages from any
 other chat are ignored (acked but not answered).
 """
+
 import json
 import threading
 import urllib.parse
@@ -17,8 +18,8 @@ class TelegramClient:
     def __init__(self, cfg, stats):
         self.token = cfg["tg_token"]
         self.chat_id = cfg["tg_chat"]
-        self.stats = stats          # HuntStats from state.py
-        self.state_file_note = ""   # filled by hunter for caught-instance info
+        self.stats = stats  # HuntStats from state.py
+        self.state_file_note = ""  # filled by hunter for caught-instance info
         self._poll_thread = None
         self._stop = threading.Event()
 
@@ -27,11 +28,13 @@ class TelegramClient:
     def send(self, text, silent=False):
         if not self.token or not self.chat_id:
             return
-        body = json.dumps({
-            "chat_id": self.chat_id,
-            "text": text,
-            "disable_notification": silent,
-        }).encode()
+        body = json.dumps(
+            {
+                "chat_id": self.chat_id,
+                "text": text,
+                "disable_notification": silent,
+            }
+        ).encode()
         req = urllib.request.Request(
             f"https://api.telegram.org/bot{self.token}/sendMessage",
             data=body,
@@ -49,7 +52,8 @@ class TelegramClient:
         if not self.token or not self.chat_id or self._poll_thread:
             return
         self._poll_thread = threading.Thread(
-            target=self._poll_loop, name="tg-status", daemon=True)
+            target=self._poll_loop, name="tg-status", daemon=True
+        )
         self._poll_thread.start()
 
     def stop_status_poller(self):
@@ -72,8 +76,9 @@ class TelegramClient:
         offset = 0
         while not self._stop.is_set():
             try:
-                updates = self._api("getUpdates", offset=offset, timeout=25,
-                                    allowed_updates=["message"])
+                updates = self._api(
+                    "getUpdates", offset=offset, timeout=25, allowed_updates=["message"]
+                )
             except Exception as exc:
                 if not self._stop.is_set():
                     log(f"telegram getUpdates failed: {exc}")
@@ -113,6 +118,7 @@ class TelegramClient:
     @staticmethod
     def _load_instance_info():
         from .state import load_state
+
         inst = load_state().get("instance")
         if not inst:
             return None

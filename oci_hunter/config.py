@@ -1,4 +1,5 @@
 """Configuration loading (.env + environment) and OCI client config."""
+
 import os
 from pathlib import Path
 
@@ -44,8 +45,9 @@ def build_cfg(env):
         "tg_token": env.get("TG_BOT_ID") or env.get("TG_BOT_TOKEN") or "",
         "tg_chat": env.get("TG_CHAT_ID", "").strip(),
         "shape": env.get("SHAPE", "VM.Standard.A1.Flex").strip(),
-        "image_prefix": env.get("IMAGE_PREFIX",
-                                "Canonical-Ubuntu-24.04-aarch64-").strip(),
+        "image_prefix": env.get(
+            "IMAGE_PREFIX", "Canonical-Ubuntu-24.04-aarch64-"
+        ).strip(),
         "vcn_name": env.get("VCN_NAME", "free-tier-hunter-vcn").strip(),
         "subnet_name": env.get("SUBNET_NAME", "free-tier-hunter-subnet").strip(),
         "ig_name": env.get("IG_NAME", "free-tier-hunter-ig").strip(),
@@ -60,7 +62,7 @@ def build_cfg(env):
         "ssh_pubkey": env.get("SSH_PUBKEY", "").strip(),
         "ssh_key_file": env.get("SSH_KEY_FILE", "").strip(),
         "ssh_key_hint": env.get("SSH_KEY_HINT", "").strip()
-                        or env.get("SSH_KEY_FILE", "").strip(),
+        or env.get("SSH_KEY_FILE", "").strip(),
     }
     missing = [k for k in ("user", "tenancy", "fingerprint") if not cfg[k]]
     if not cfg["pem"] and not cfg["key_file"]:
@@ -77,8 +79,10 @@ def build_cfg(env):
     else:
         cfg["pem"] = cfg["pem"].replace("\\n", "\n")
     if not cfg["tg_token"] or not cfg["tg_chat"]:
-        log("telegram not fully configured (TG_BOT_ID / TG_CHAT_ID) "
-            "-- notifications disabled")
+        log(
+            "telegram not fully configured (TG_BOT_ID / TG_CHAT_ID) "
+            "-- notifications disabled"
+        )
     return cfg
 
 

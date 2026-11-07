@@ -6,6 +6,7 @@ network bootstrap and any caught instance are reused rather than recreated.
 HuntStats is the in-memory mirror of the live hunt, shared with the
 Telegram /status poller thread.
 """
+
 import json
 import threading
 from pathlib import Path
@@ -35,14 +36,15 @@ class HuntStats:
 
     def __init__(self):
         self._lock = threading.Lock()
-        self._started_at = None   # monotonic seconds, set by run()
+        self._started_at = None  # monotonic seconds, set by run()
         self._attempt = 0
-        self._ad = None           # short name of the AD being tried
-        self._last_error = None   # human-readable last failure
-        self._backoff = None      # description of current backoff, if any
+        self._ad = None  # short name of the AD being tried
+        self._last_error = None  # human-readable last failure
+        self._backoff = None  # description of current backoff, if any
 
     def start(self):
         import time
+
         with self._lock:
             self._started_at = time.monotonic()
 
@@ -64,6 +66,7 @@ class HuntStats:
 
     def snapshot(self):
         import time
+
         with self._lock:
             uptime = None
             if self._started_at is not None:

@@ -1,4 +1,5 @@
 """Ubuntu aarch64 image selection."""
+
 from .errors import Fatal
 
 
