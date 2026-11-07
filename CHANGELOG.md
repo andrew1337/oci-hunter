@@ -14,7 +14,10 @@
   state file — both are handled inside the container now.
 - State file moved to `state/.hunter_state.json` (matching the compose
   host path), created on demand; the legacy root-level
-  `.hunter_state.json` is still read as a fallback.
+  `.hunter_state.json` is still read as a fallback. `save_state` also
+  recovers from the empty leftover directories those per-file mounts
+  created on the host in place of the state file (`Errno 21 Is a
+  directory`).
 
 ## 2026-11-07
 

@@ -19,9 +19,19 @@ LEGACY_STATE_FILE = APP_DIR / ".hunter_state.json"
 
 
 def save_state(data):
+    payload = json.dumps(data, indent=2)
     try:
         STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        STATE_FILE.write_text(json.dumps(data, indent=2))
+        STATE_FILE.write_text(payload)
+    except IsADirectoryError:
+        # Per-file volume mounts used to leave STATE_FILE as a directory
+        # on the host whenever the file was missing. An empty leftover is
+        # safe to drop and retry; a non-empty one is logged and kept.
+        try:
+            STATE_FILE.rmdir()
+            STATE_FILE.write_text(payload)
+        except OSError as exc:
+            log(f"could not write state file: {exc}")
     except OSError as exc:
         log(f"could not write state file: {exc}")
 
