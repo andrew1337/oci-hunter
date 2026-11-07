@@ -1,0 +1,17 @@
+.DS_Store
+# secrets / personal files
+.env
+*.key
+*.key.pub
+*.pem
+.ssh/
+
+# runtime state
+.hunter_state.json
+state/
+__pycache__/
+*.pyc
+
+# terraform
+.terraform/
+*.zip
