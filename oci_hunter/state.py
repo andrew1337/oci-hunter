@@ -14,21 +14,27 @@ from pathlib import Path
 from .config import APP_DIR
 from .logging import log
 
-STATE_FILE = APP_DIR / ".hunter_state.json"
+STATE_FILE = APP_DIR / "state" / ".hunter_state.json"
+LEGACY_STATE_FILE = APP_DIR / ".hunter_state.json"
 
 
 def save_state(data):
     try:
+        STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
         STATE_FILE.write_text(json.dumps(data, indent=2))
     except OSError as exc:
         log(f"could not write state file: {exc}")
 
 
 def load_state():
-    try:
-        return json.loads(STATE_FILE.read_text())
-    except (OSError, ValueError):
-        return {}
+    for path in (STATE_FILE, LEGACY_STATE_FILE):
+        try:
+            data = json.loads(path.read_text())
+            if data:
+                return data
+        except (OSError, ValueError):
+            continue
+    return {}
 
 
 class HuntStats:

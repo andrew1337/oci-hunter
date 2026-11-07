@@ -55,8 +55,9 @@ Generated in the Oracle console — no keys are issued anywhere else:
    `IMAGE_PREFIX=Canonical-Ubuntu-24.04-aarch64-` (exact prefix of the image
    display name — if nothing matches, the hunter aborts and lists what is
    available in the region),
-   `SSH_KEY_FILE=ssh_key` (name of the private key mounted into the
-   container; the `.pub` next to it is used for the instance).
+   `SSH_KEY_FILE=` (optional: name of the private key next to the code;
+   the `.pub` next to it is used for the instance. If unset, the first
+   `*.pub` in the project dir is picked automatically).
    Network naming: `VCN_NAME=free-tier-hunter-vcn`,
    `SUBNET_NAME=free-tier-hunter-subnet`, `IG_NAME=free-tier-hunter-ig`,
    `VCN_CIDR=10.0.0.0/16`, `SUBNET_CIDR=10.0.0.0/24`.
@@ -64,10 +65,14 @@ Generated in the Oracle console — no keys are issued anywhere else:
 ### 3. SSH key
 
 Oracle doesn't provide these — generate your own pair
-(`ssh-keygen -t ed25519 -f ssh_key`) next to the code. `run.sh` picks up the
-first `*.pub` in the directory (or whatever `SSH_KEY_FILE` names) and mounts
-it into the container; you never paste the key contents anywhere. The
-private key name is reused for the `ssh -i ...` hint in the success message.
+(`ssh-keygen -t ed25519 -f ssh_key`) next to the code. The hunter picks the
+key itself: `SSH_KEY_FILE` if set, otherwise the first `*.pub` in the
+project dir. The whole project dir is mounted into the container (both
+`run.sh` and `docker-compose.yml` do `- .:/app`), so you never paste the key
+contents anywhere and nothing breaks if a file is missing — the hunter just
+tells you which one it needs. The private key name is reused for the
+`ssh -i ...` hint in the success message (`SSH_KEY_FILE` overrides the
+auto-detected name in the hint).
 
 ### 4. Run
 

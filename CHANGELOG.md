@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-11-07 (2)
+
+- `docker-compose.yml` / `run.sh` mount the whole project dir (`- .:/app`)
+  instead of individual files. Per-file mounts silently created junk
+  directories on the host whenever a file was missing (e.g. no
+  `ssh_key.pub`), so the container started but crashed in a loop with
+  "no SSH public key found" — exactly what broke `compose up -d` on a
+  fresh machine.
+- Key picking moved into the hunter: `SSH_PUBKEY` env, then `SSH_KEY_FILE`
+  (the `.pub` sibling of the private key), then the first `*.pub` in the
+  project dir. `run.sh` lost its own key detection and pre-touching of the
+  state file — both are handled inside the container now.
+- State file moved to `state/.hunter_state.json` (matching the compose
+  host path), created on demand; the legacy root-level
+  `.hunter_state.json` is still read as a fallback.
+
 ## 2026-11-07
 
 - Default instance size raised to 2 OCPU / 12 GB (half of the A1 free-tier

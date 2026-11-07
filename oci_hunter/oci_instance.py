@@ -101,7 +101,7 @@ def retry_after_seconds(exc, default):
 
 def load_pubkey(cfg):
     """SSH public key: SSH_PUBKEY env, SSH_KEY_FILE (.pub is read from the
-    sibling private key path), or a mounted /app/ssh_key.pub."""
+    sibling private key path), or the first *.pub in the project dir."""
     if cfg["ssh_pubkey"]:
         log("using SSH_PUBKEY from environment")
         return cfg["ssh_pubkey"]
@@ -119,12 +119,11 @@ def load_pubkey(cfg):
             )
         log(f"using ssh key from {pub.name}")
         return pub.read_text(encoding="utf-8").strip()
-    path = APP_DIR / "ssh_key.pub"
-    if path.is_file():
-        log(f"using ssh key from {path.name}")
-        return path.read_text(encoding="utf-8").strip()
+    pubs = sorted(APP_DIR.glob("*.pub"))
+    if pubs:
+        log(f"using ssh key from {pubs[0].name}")
+        return pubs[0].read_text(encoding="utf-8").strip()
     raise Fatal(
-        "no SSH public key found (set SSH_KEY_FILE in .env to the "
-        "private key file name mounted into the container, or set "
-        "SSH_PUBKEY)"
+        "no SSH public key found (drop a *.pub next to the code, or set "
+        "SSH_KEY_FILE in .env to the private key file name, or set SSH_PUBKEY)"
     )

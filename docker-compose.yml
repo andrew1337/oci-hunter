@@ -4,10 +4,12 @@ services:
     container_name: oci-hunter
     restart: unless-stopped
     environment:
-      # Name of the private key on the host (its .pub is mounted below);
-      # shows up verbatim in the "ssh -i ..." success message.
+      # Name of the private key next to the code; shows up verbatim
+      # in the "ssh -i ..." success message.
       SSH_KEY_HINT: ${SSH_KEY_FILE:-ssh_key}
     volumes:
-      - ./.env:/app/.env:ro
-      - ./${SSH_KEY_FILE:-ssh_key}.pub:/app/ssh_key.pub:ro
-      - ./state/.hunter_state.json:/app/.hunter_state.json
+      # The whole project dir: .env, the SSH key pair, the code and
+      # state/ all come with it. Mounting individual files used to
+      # create junk directories on the host whenever a file was
+      # missing (e.g. no ssh_key.pub) — that cannot happen now.
+      - .:/app
