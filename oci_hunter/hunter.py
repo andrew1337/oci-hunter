@@ -55,6 +55,7 @@ def run(args):
 
     stats = HuntStats()
     tg = TelegramClient(cfg, stats)
+    stop = tg.hunt_stop  # /stop sets this; the hunt loop obeys it
 
     tg.send(
         f"🐾 Hunt started: {cfg['region']}, {cfg['shape']} "
@@ -95,6 +96,9 @@ def run(args):
     server_streak = 0
     rl_streak = 0
     while True:
+        if stop.is_set():
+            log("hunt stopped via /stop")
+            return 0
         attempt += 1
         ad = ads[(attempt - 1) % len(ads)]
         ad_short = ad.split(":")[-1]
@@ -117,7 +121,9 @@ def run(args):
                     error="429 " + err,
                     backoff=f"{wait_s}s (429 x{rl_streak}, {header})",
                 )
-                time.sleep(wait_s)
+                if stop.wait(wait_s):
+                    log("hunt stopped via /stop")
+                    return 0
                 if args.once:
                     return 1
                 continue
@@ -147,7 +153,9 @@ def run(args):
             rl_streak = 0
             log(f"🎉 attempt #{attempt} @ {ad_short} → launched! " f"ocid {inst.id}")
             try:
-                ip = wait_public_ip(compute, vnet, cfg["tenancy"], inst.id)
+                ip = wait_public_ip(
+                    compute, vnet, cfg["tenancy"], inst.id, stop_event=stop
+                )
             except Exception as exc:
                 log(f"public ip lookup failed: {exc}")
                 ip = None
@@ -172,4 +180,6 @@ def run(args):
             tg.send(f"Still hunting: {attempt} attempts, uptime {uptime}", silent=True)
             log(f"heartbeat: {attempt} attempts, uptime {uptime}")
         stats.record_result()  # capacity error: clear backoff display
-        time.sleep(cfg["check_every"] + random.uniform(-8, 15))
+        if stop.wait(cfg["check_every"] + random.uniform(-8, 15)):
+            log("hunt stopped via /stop")
+            return 0

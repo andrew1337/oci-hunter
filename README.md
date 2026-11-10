@@ -87,7 +87,7 @@ if they don't exist, then starts one launch attempt roughly every minute.
 
 `./run.sh --once` makes a single attempt and exits — handy for a quick test.
 
-### 5. Telegram `/status`
+### 5. Telegram `/status` and `/stop`
 
 Send `/status` to the bot from the chat whose id is in `TG_CHAT_ID` and it
 replies with the live hunt state:
@@ -100,6 +100,10 @@ current AD: eu-amsterdam-1-AD-1
 backoff: 240s (429 x2, ladder)
 last error: 429 TooManyRequests: Too many requests for the user
 ```
+
+`/stop` stops the hunt gracefully: the bot replies "🛑 Stopping the hunt…"
+and the hunter exits within the current backoff/sleep — never mid-attempt.
+Useful to pause the hunt from your phone without touching the container.
 
 Messages from any other chat are ignored — the bot never replies to
 strangers, even if they somehow find the bot's handle.
@@ -115,7 +119,10 @@ public IP: 130.x.x.x
 ssh -i ssh-key-2026-11-04.key ubuntu@130.x.x.x
 ```
 
-The script exits after success; the instance keeps running. Delete it from
+The script exits after success — the hunter process stops and the container
+goes down with it (`restart: on-failure` in docker-compose keeps it from
+coming back; `./run.sh` removes it with `--rm`). The instance keeps running.
+Delete it from
 the console (or with the OCI CLI) when you're done — the free tier only
 covers *running* A1 instances, not idle-created ones.
 
@@ -192,4 +199,5 @@ tries hit different ADs even at a slow pace.
 - **Cost**: Always Free covers 4 OCPUs / 24 GB total across A1.Flex instances;
   this uses half of that. The 128 GB boot volume counts against the 200 GB
   block-storage free quota.
-- Stop with Ctrl+C; run `./run.sh` again later to resume (same state file).
+- Stop with Ctrl+C or `/stop` in Telegram; run `./run.sh` again later to
+  resume (same state file).

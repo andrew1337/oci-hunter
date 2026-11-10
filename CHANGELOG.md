@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-10
+
+- New Telegram `/stop` command (owner chat only): the bot acks with
+  "🛑 Stopping the hunt…" and the hunt loop exits gracefully within the
+  current backoff/sleep (all `time.sleep` calls are now `Event.wait`s), so
+  a stop request never waits out a 15-minute backoff.
+- After success the hunter stops for good: the success and "already exists"
+  paths both exit with code 0, and `docker-compose.yml` changed from
+  `restart: unless-stopped` to `restart: on-failure` so exit 0 no longer
+  restarts the container (previously it looped, re-sending the "already
+  exists" message every restart). `./run.sh` (podman, `--rm`) already stops
+  after a successful exit.
+
 ## 2026-11-07 (2)
 
 - `docker-compose.yml` / `run.sh` mount the whole project dir (`- .:/app`)

@@ -45,9 +45,13 @@ def launch_instance(compute, cfg, ad, subnet_id, image_id, pubkey):
     ).data
 
 
-def wait_public_ip(compute, vnet, tenancy, instance_id, timeout=300):
+def wait_public_ip(
+    compute, vnet, tenancy, instance_id, timeout=300, stop_event=None
+):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
+        if stop_event is not None and stop_event.is_set():
+            return None
         try:
             for att in compute.list_vnic_attachments(
                 tenancy, instance_id=instance_id
@@ -57,7 +61,10 @@ def wait_public_ip(compute, vnet, tenancy, instance_id, timeout=300):
                     return vnic.public_ip
         except ServiceError as exc:
             log(f"vnic lookup failed: {exc.message}")
-        time.sleep(10)
+        if stop_event is None:
+            time.sleep(10)
+        elif stop_event.wait(10):
+            return None
     return None
 
 

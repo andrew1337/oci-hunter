@@ -2,7 +2,9 @@ services:
   oci-hunter:
     build: .
     container_name: oci-hunter
-    restart: unless-stopped
+    # Exit 0 (success / /stop / "already exists") stops the container;
+    # exit 1 (fatal error) restarts it.
+    restart: on-failure
     environment:
       # Name of the private key next to the code; shows up verbatim
       # in the "ssh -i ..." success message.

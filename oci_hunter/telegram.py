@@ -1,9 +1,11 @@
-"""Telegram notifications and the owner-only /status command.
+"""Telegram notifications, the owner-only /status command and /stop.
 
 Sending is fire-and-forget: Telegram problems must never kill the hunt.
 The status poller long-polls getUpdates in a background thread and only
 ever replies to the chat configured via TG_CHAT_ID; messages from any
-other chat are ignored (acked but not answered).
+other chat are ignored (acked but not answered). /stop sets the shared
+hunt_stop event the hunt loop waits on, so a stop request lands within
+the current backoff/sleep instead of after it.
 """
 
 import json
@@ -22,6 +24,8 @@ class TelegramClient:
         self.state_file_note = ""  # filled by hunter for caught-instance info
         self._poll_thread = None
         self._stop = threading.Event()
+        # /stop request: set by the poller, obeyed by the hunt loop.
+        self.hunt_stop = threading.Event()
 
     # ------------------------------------------------------------- send ----
 
@@ -91,11 +95,18 @@ class TelegramClient:
                 if str((msg.get("chat") or {}).get("id")) != str(self.chat_id):
                     continue
                 text = (msg.get("text") or "").strip()
-                if text.split("@")[0].lower() in ("/status", "/status@"):
+                cmd = text.split("@")[0].lower()
+                if cmd in ("/status", "/status@"):
                     try:
                         self.send(self._status_text())
                     except Exception as exc:
                         log(f"telegram /status reply failed: {exc}")
+                elif cmd in ("/stop", "/stop@"):
+                    try:
+                        self.send("🛑 Stopping the hunt…")
+                    except Exception as exc:
+                        log(f"telegram /stop ack failed: {exc}")
+                    self.hunt_stop.set()
 
     def _status_text(self):
         snap = self.stats.snapshot()
